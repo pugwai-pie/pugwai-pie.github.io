@@ -1,0 +1,40 @@
+name: Restore awards section
+on:
+  push:
+    branches: [restore-awards-clean]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restore-awards-clean
+      - name: Restore awards section
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'href="#awards"' not in s:
+              s=s.replace('<a href="#media">Public Footprint</a>','<a href="#awards">Awards</a><a href="#media">Public Footprint</a>')
+          css='.awards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.award{border:1px solid rgba(255,255,255,.11);border-radius:28px;background:linear-gradient(180deg,rgba(16,23,39,.9),rgba(7,12,22,.95));padding:24px;min-height:205px;transition:.28s}.award:hover{transform:translateY(-7px);border-color:rgba(255,212,111,.42)}.award h3{font-size:22px;line-height:1.08;margin:7px 0}.award p{color:var(--muted)}.award .select{font-size:10px;color:var(--gold);font-weight:850;letter-spacing:.08em}.award:first-child{grid-column:span 2;background:radial-gradient(circle at 92% 0,rgba(255,212,111,.18),transparent 36%),linear-gradient(150deg,#17160f,#0a1019)}'
+          if '.awards-grid{' not in s:
+              s=s.replace('.ticker-wrap{',css+'.ticker-wrap{')
+              s=s.replace('@media(max-width:1000px){.hero,.project-pair,.serving-visual,.patents{grid-template-columns:1fr}.grid,.newsgrid{grid-template-columns:1fr 1fr}', '@media(max-width:1000px){.hero,.project-pair,.serving-visual,.patents{grid-template-columns:1fr}.grid,.newsgrid,.awards-grid{grid-template-columns:1fr 1fr}.award:first-child{grid-column:span 2}')
+              s=s.replace('@media(max-width:650px){.grid,.newsgrid{grid-template-columns:1fr}', '@media(max-width:650px){.grid,.newsgrid,.awards-grid{grid-template-columns:1fr}.award:first-child{grid-column:auto}')
+          awards='''<section id="awards" class="section"><div class="w"><div class="head reveal"><div><small>05 / AWARDS + HONORS</small><h2>Recognition<br><span class="gradient">earned in selective fields.</span></h2></div><p>National, international and state-level recognition across writing, mathematics, entrepreneurship and STEM.</p></div><div class="awards-grid reveal"><article class="award"><div class="tag">NATIONAL YOUNGARTS FOUNDATION</div><h3>Winner with Distinction · Writing</h3><p>Top-tier national recognition in writing, including National YoungArts Week and a $2,000 award.</p><div class="select">NATIONAL · HIGHLY SELECTIVE</div></article><article class="award"><div class="tag">USA MATHEMATICAL OLYMPIAD</div><h3>USAMO Qualifier</h3><p>Qualified after a 14/15 AIME performance.</p><div class="select">~300 STUDENTS NATIONWIDE</div></article><article class="award"><div class="tag">PULITZER CENTER</div><h3>Fighting Words Poetry Finalist</h3><p>One of 23 finalists from about 1,600 submissions worldwide.</p><div class="select">23 / 1,600 WORLDWIDE</div></article><article class="award"><div class="tag">GENIUS OLYMPIAD</div><h3>Silver Medalist + Honorable Mention</h3><p>2025 Silver Medal in Business and 2026 Honorable Mention.</p><div class="select">INTERNATIONAL</div></article><article class="award"><div class="tag">VIRGINIA DECA</div><h3>1st Place · Project Management Financial Literacy</h3><p>State champion and ICDC qualifier.</p><div class="select">STATE CHAMPION</div></article><article class="award"><div class="tag">TiE YOUNG ENTREPRENEURS</div><h3>1st Place · DC</h3><p>Top regional youth entrepreneurship recognition.</p><div class="select">ENTREPRENEURSHIP</div></article><article class="award"><div class="tag">NASA POWER TO EXPLORE</div><h3>National Semifinalist</h3><p>Top 40 among 2,000+ national submissions.</p><div class="select">TOP 40 / 2,000+</div></article><article class="award"><div class="tag">OFFICE OF NAVAL RESEARCH</div><h3>Naval Horizons National Winner</h3><p>National recognition for STEM writing and exploration.</p><div class="select">NATIONAL</div></article><article class="award"><div class="tag">SCIENCE OLYMPIAD</div><h3>State Medalist</h3><p>State-level medalist as part of Oakton's first National-bid-offer team.</p><div class="select">STATE</div></article></div></div></section>'''
+          if 'id="awards"' not in s:
+              s=s.replace('<section id="media"',awards+'<section id="media"')
+          s=s.replace('<small>05 / PUBLIC FOOTPRINT</small>','<small>06 / PUBLIC FOOTPRINT</small>').replace('<small>06 / INNOVATION + IP</small>','<small>07 / INNOVATION + IP</small>')
+          p.write_text(s)
+          PY
+      - name: Commit clean text-only change
+        run: |
+          rm .github/workflows/restore-awards.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/restore-awards.yml
+          git commit -m "Restore awards section" || exit 0
+          git push origin HEAD:restore-awards-clean
