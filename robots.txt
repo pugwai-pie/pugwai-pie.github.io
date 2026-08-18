@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Permanent GitHub Pages host for Dev Rai's official profile site.
+Sitemap: https://pugwai-pie.github.io/sitemap.xml
