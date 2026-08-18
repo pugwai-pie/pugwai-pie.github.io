@@ -1,0 +1,33 @@
+name: Inject artsy interaction layer
+on:
+  push:
+    branches: [artsy-scroll-interactions]
+permissions:
+  contents: write
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: artsy-scroll-interactions
+          fetch-depth: 0
+      - name: Inject artsy interactions script
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          tag='<script src="assets/artsy-interactions.js"></script>'
+          if tag not in s:
+              s=s.replace('</body>', tag+'\n</body>')
+              p.write_text(s)
+          PY
+      - name: Commit generated wiring
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Load artsy scroll interaction layer"
+          git push origin HEAD:artsy-scroll-interactions
